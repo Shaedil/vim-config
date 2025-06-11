@@ -6,28 +6,20 @@
 --│ StartUpTimeAvg: 280 ms                                            │
 --└───────────────────────────────────────────────────────────────────┘
 -- lazy.nvim Bootstrap {{{
-local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
-if not vim.loop.fs_stat(lazypath) then
-  vim.fn.system({
-    "git",
-    "clone",
-    "--filter=blob:none",
-    "https://github.com/folke/lazy.nvim.git",
-    "--branch=stable", -- latest stable release
-    lazypath,
-  })
-end
-vim.opt.rtp:prepend(vim.env.LAZY or lazypath)
+local lazypath = vim.fn.stdpath 'data' .. '/lazy/lazy.nvim'
+if not (vim.uv or vim.loop).fs_stat(lazypath) then
+  local lazyrepo = 'https://github.com/folke/lazy.nvim.git'
+  local out = vim.fn.system { 'git', 'clone', '--filter=blob:none', '--branch=stable', lazyrepo, lazypath }
+  if vim.v.shell_error ~= 0 then
+    error('Error cloning lazy.nvim:\n' .. out)
+  end
+end ---@diagnostic disable-next-line: undefined-field
+vim.opt.rtp:prepend(lazypath)
 vim.g.mapleader = ' '
 vim.g.maplocalleader = ' '
 --- }}}
 -- Plugins {{{
 require('lazy').setup({
-  {'folke/lazy.nvim',
-    version = '*',
-    lazy = true,
-    colorscheme = { "bamboo" },
-  },
   {'williamboman/mason.nvim', cmd = "Mason"},
   {'neovim/nvim-lspconfig',
     event = { "BufRead", "BufNewFile", "InsertEnter" },
@@ -71,7 +63,7 @@ require('lazy').setup({
     ft = "markdown",
     dependencies={"nvim-lua/plenary.nvim"},
   },
-  {'github/copilot.vim', build = ":Copilot setup"},
+  -- {'github/copilot.vim', build = ":Copilot setup"},
   {'bronson/vim-visual-star-search', keys = {'*', '#', '<leader>*'}, lazy = true},
   {'ThePrimeagen/harpoon', event = "VeryLazy"},
   {'tpope/vim-speeddating', keys = {'C-A', 'C-X'}},
@@ -90,7 +82,7 @@ require('lazy').setup({
     event = { "BufRead", "BufNewFile" },
     dependencies = { "nvim-lua/plenary.nvim" }
   },
-  {'rebelot/kanagawa.nvim', lazy = true, event = 'VeryLazy', enabled=false},
+  -- {'rebelot/kanagawa.nvim', lazy = true, event = 'VeryLazy', enabled=false},
   {'ribru17/bamboo.nvim', lazy = true, event = 'VeryLazy'},
   {'lukas-reineke/indent-blankline.nvim', main = "ibl"},
   {'nvim-lualine/lualine.nvim', event = "VeryLazy"},
@@ -124,6 +116,7 @@ vim.opt.shortmess = "icfxtoTOlFI"
 vim.opt.mouse = 'a'
 vim.opt.confirm = true
 vim.opt.pumheight = 20
+vim.opt.swapfile = false
 -- gui settings
 vim.opt.termguicolors = true
 vim.opt.cursorline = true
@@ -136,7 +129,7 @@ vim.opt.fillchars:append({diff='╱'})
 vim.opt.conceallevel = 2
 -- vim.opt.signcolumn = 'yes'
 vim.opt.signcolumn = 'auto'
-vim.opt.guifont = "JetBrainsMono NFM:h10"
+vim.opt.guifont = "JetBrainsMono NFM:h9"
 -- optimizations
 vim.opt.breakindent = true
 vim.opt.synmaxcol = 300
@@ -417,7 +410,6 @@ require('ibl').setup {
 -- See `:help gitsigns.txt`
 require('gitsigns').setup {
   current_line_blame_formatter = '<author>, <author_time:%m-%d-%Y> - <summary>',
-  current_line_blame_formatter_opts = { relative_time = false },
 }
 --- }}}
 -- Telescope  {{{
@@ -506,7 +498,7 @@ end, { desc = '[/] Fuzzily search in current buffer]' })
 require('nvim-treesitter.configs').setup {
   -- Add languages to be installed here that you want installed for treesitter
   ensure_installed = {
-    'c', 'cpp', 'go', 'lua', 'python', 'rust', 'typescript', 'vimdoc', 'vim', 'svelte', 'css', 'json', 'javascript', 'java', 'html', 'scss'
+    -- 'c', 'cpp', 'go', 'lua', 'python', 'rust', 'typescript', 'vimdoc', 'vim', 'svelte', 'css', 'json', 'javascript', 'java', 'html', 'scss'
   },
   modules = {},
   sync_install = false,
@@ -535,33 +527,47 @@ require('harpoon').setup()
 --   colors = {
 --     theme = { all = { ui = { bg_gutter = "none" } } }
 --   },
---   overrides = function(colors)
---     local theme = colors.theme
---     return {
---       NormalFloat = { bg = "none" },
---       FloatBorder = { bg = "none" },
---       FloatTitle = { bg = "none" },
---       NormalDark = { fg = theme.ui.fg_dim, bg = theme.ui.bg_m3 },
---       LazyNormal = { bg = theme.ui.bg_m3, fg = theme.ui.fg_dim },
---       MasonNormal = { bg = theme.ui.bg_m3, fg = theme.ui.fg_dim },
---       Pmenu = { fg = theme.ui.shade0, bg = theme.ui.bg_p1, }, -- add `blend = vim.o.pumblend` to enable transparency
---       PmenuSel = { fg = "NONE", bg = theme.ui.bg_p2 },
---       PmenuSbar = { bg = theme.ui.bg_m1 },
---       PmenuThumb = { bg = theme.ui.bg_p2 },
---       TelescopeTitle = { fg = theme.ui.special, bold = true },
---       TelescopePromptNormal = { bg = theme.ui.bg_p1 },
---       TelescopePromptBorder = { fg = theme.ui.bg_p1, bg = theme.ui.bg_p1 },
---       TelescopeResultsNormal = { fg = theme.ui.fg_dim, bg = theme.ui.bg_m1 },
---       TelescopeResultsBorder = { fg = theme.ui.bg_m1, bg = theme.ui.bg_m1 },
---       TelescopePreviewNormal = { bg = theme.ui.bg_dim },
---       TelescopePreviewBorder = { bg = theme.ui.bg_dim, fg = theme.ui.bg_dim },
---     }
---   end,
+--   background = {
+--     dark = "wave",
+--     light = "lotus",
+--   },
+--   compile = false,
+--   undercurl = true,
+--   commentStyle = { italic = false },
+--   functionStyle = { bold = true },
+--   keywordStyle = { italic = true },
+--   statementStyle = { bold = true },
+--   typeStyle = {},
+--   transparent = false,
+--   dimInactive = false,
+--   terminalColors = true,
+  -- overrides = function(colors)
+  --   local theme = colors.theme
+  --   return {
+  --     NormalFloat = { bg = "none" },
+  --     FloatBorder = { bg = "none" },
+  --     FloatTitle = { bg = "none" },
+  --     NormalDark = { fg = theme.ui.fg_dim, bg = theme.ui.bg_m3 },
+  --     LazyNormal = { bg = theme.ui.bg_m3, fg = theme.ui.fg_dim },
+  --     MasonNormal = { bg = theme.ui.bg_m3, fg = theme.ui.fg_dim },
+  --     Pmenu = { fg = theme.ui.shade0, bg = theme.ui.bg_p1, }, -- add `blend = vim.o.pumblend` to enable transparency
+  --     PmenuSel = { fg = "NONE", bg = theme.ui.bg_p2 },
+  --     PmenuSbar = { bg = theme.ui.bg_m1 },
+  --     PmenuThumb = { bg = theme.ui.bg_p2 },
+  --     TelescopeTitle = { fg = theme.ui.special, bold = true },
+  --     TelescopePromptNormal = { bg = theme.ui.bg_p1 },
+  --     TelescopePromptBorder = { fg = theme.ui.bg_p1, bg = theme.ui.bg_p1 },
+  --     TelescopeResultsNormal = { fg = theme.ui.fg_dim, bg = theme.ui.bg_m1 },
+  --     TelescopeResultsBorder = { fg = theme.ui.bg_m1, bg = theme.ui.bg_m1 },
+  --     TelescopePreviewNormal = { bg = theme.ui.bg_dim },
+  --     TelescopePreviewBorder = { bg = theme.ui.bg_dim, fg = theme.ui.bg_dim },
+  --   }
+  -- end,
 -- })
-vim.cmd("colorscheme bamboo")
+require('bamboo').load()
 -- }}}
 -- LSP Signs  {{{
-local signs = { Error = "✘ ", Warn = "⚠️ ", Hint = " ", Info = " " }
+local signs = { Error = "✘ ", Warn = "⚠ ", Hint = " ", Info = " " }
 for type, icon in pairs(signs) do
   local hl = "DiagnosticSign" .. type
   vim.fn.sign_define(hl, { text = icon, texthl = hl, numhl = "" })
